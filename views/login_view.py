@@ -3,11 +3,10 @@ from utilidades.colors import palettet
 from utilidades.fonts import appFonts 
 
 def login_view(page: ft.Page):
-    # 1. Configuración de fuentes y Tema Global (Elimina el azul de raíz)
     page.fonts = appFonts.FONTS_DICT
     page.theme = ft.Theme(
         color_scheme=ft.ColorScheme(
-            primary=palettet.accent,  # Esto hace que el cursor y la etiqueta sean verdes
+            primary=palettet.accent,  
         )
     )
 
@@ -26,7 +25,7 @@ def login_view(page: ft.Page):
             page.snack_bar.open = True
             page.update()
 
-    # --- CAMPO DE USUARIO ---
+
     user_input = ft.TextField(
         label="Usuario", 
         width=320,
@@ -36,15 +35,15 @@ def login_view(page: ft.Page):
         border_color=palettet.secundary,
         prefix_icon=ft.icons.PERSON_ROUNDED,
         
-        # Propiedades de enfoque
-        focused_border_color=palettet.accent, # Borde verde al hacer clic
-        cursor_color=palettet.accent,         # Puntero verde
+        
+        focused_border_color=palettet.accent, 
+        cursor_color=palettet.accent,         
         selection_color=ft.colors.with_opacity(0.3, palettet.accent),
         
         on_submit=on_login_click 
     )
     
-    # --- CAMPO DE CONTRASEÑA ---
+   
     pass_input = ft.TextField(
         label="Contraseña", 
         password=True, 
@@ -56,15 +55,15 @@ def login_view(page: ft.Page):
         border_color=palettet.secundary,
         prefix_icon=ft.icons.LOCK_ROUNDED,
         
-        # Propiedades de enfoque
-        focused_border_color=palettet.accent, # Borde verde al hacer clic
-        cursor_color=palettet.accent,         # Puntero verde
+       
+        focused_border_color=palettet.accent, 
+        cursor_color=palettet.accent,         
         selection_color=ft.colors.with_opacity(0.3, palettet.accent),
         
         on_submit=on_login_click 
     )
 
-    # --- BOTÓN DE INICIO ---
+    
     btn_login = ft.ElevatedButton(
         text="INICIAR SESIÓN",
         width=320,
@@ -83,7 +82,7 @@ def login_view(page: ft.Page):
         size=14
     )
 
-    # --- ESTRUCTURA DE LA VISTA ---
+  
     return ft.Container(
         content=ft.Column(
             [

@@ -3,7 +3,7 @@ import asyncio
 import sys
 import warnings
 
-# Importaciones de tu estructura de proyecto
+
 from utilidades.colors import palettet
 from utilidades.fonts import appFonts
 from views.login_view import login_view
