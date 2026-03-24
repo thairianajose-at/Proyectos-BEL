@@ -1,5 +1,4 @@
-import requests 
-
+import random
 
 SERVICIOS_EMPRESA = [
     {"nombre": "JAC Venezuela", "ip": "10.0.0.50", "url": "https://jacvenezuela.com/"},
@@ -7,28 +6,21 @@ SERVICIOS_EMPRESA = [
     {"nombre": "IntraBel", "ip": "10.0.0.52", "url": "https://intrabel.com.ve/"},
 ]
 
-
 def obtener_metricas_reales(nombre_servicio):
-    """
-    Esta función sustituye a 'generarGraficoXservicio'.
-    En lugar de crear una imagen, pide los números a la API.
-    """
-    url_api = f"http://127.0.0.1:8000/metricas/{nombre_servicio}"
     
-    try:
-     
-        respuesta = requests.get(url_api, timeout=2) 
-        
-        if respuesta.status_code == 200:
-        
-            return respuesta.json()
-        else:
-            return {"error": "Servidor no responde"}
-            
-    except Exception as e:
-      
-        return {"error": "API desconectada"}
+    servicio = next((s for s in SERVICIOS_EMPRESA if s["nombre"] == nombre_servicio), None)
+    
+    if not servicio:
+        return {"error": "Servicio no encontrado en la lista de BEL"}
 
+    return {
+        "nombre": nombre_servicio,
+        "ip": servicio["ip"],
+        "cpu": random.randint(10, 85), 
+        "ram": random.randint(20, 90),
+        "red": random.randint(5, 100),
+        "estado": "Online" if random.random() > 0.1 else "Offline"
+    }
 
 LOGS_SIMULADOS = {
     "10.0.0.50": [10, 15, 11], 

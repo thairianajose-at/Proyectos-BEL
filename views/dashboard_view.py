@@ -4,147 +4,112 @@ from utilidades.colors import palettet
 from utilidades.fonts import appFonts
 
 def dashboard_view(page: ft.Page):
-    
     page.fonts = appFonts.FONTS_DICT
-
-    def ir_a_metricas(nombre):
-        page.go(f"/logs/{nombre}")
-
-  
     is_dark = page.theme_mode == ft.ThemeMode.DARK
     card_bg = ft.colors.SURFACE_VARIANT if is_dark else ft.colors.WHITE
-    title_color = ft.colors.WHITE if is_dark else palettet.secundary
+    
+    servicios_controles = {}
 
-    cards = []
-    for servicio in SERVICIOS_EMPRESA:
-       
-        metricas = obtener_metricas_reales(servicio["nombre"])
-        cpu_val = metricas.get("cpu", 0) / 100
-        ram_val = metricas.get("ram", 0) / 100
-        estado = metricas.get("estado", "Offline")
+    def crear_card_monitoreo(servicio):
+    
+        cpu_rod = ft.BarChartRod(from_y=0, to_y=0, color=palettet.cpu, width=12, border_radius=4)
+        ram_rod = ft.BarChartRod(from_y=0, to_y=0, color=palettet.ram, width=12, border_radius=4)
+        red_rod = ft.BarChartRod(from_y=0, to_y=0, color=palettet.red, width=12, border_radius=4)
 
-      
-        btn_style = ft.ButtonStyle(
-            color={
-                ft.MaterialState.HOVERED: palettet.primary,
-                ft.MaterialState.DEFAULT: palettet.secundary,
-            },
-            bgcolor={
-                ft.MaterialState.HOVERED: palettet.secundary,
-                ft.MaterialState.DEFAULT: ft.colors.TRANSPARENT,
-            },
-            padding=ft.padding.all(0),
-            shape=ft.RoundedRectangleBorder(radius=0),
-            animation_duration=300,
-        )
-
-        card_content = ft.Card(
-            elevation=3,
-            content=ft.Container(
-                padding=15,
-                border_radius=12,
-                bgcolor=card_bg,
-                content=ft.Column([
-                    
-                    ft.ListTile(
-                        leading=ft.Icon(ft.icons.DNS_ROUNDED, color=palettet.secundary, size=30),
-                        title=ft.Text(servicio["nombre"], style=appFonts.LABEL, weight="bold", color=title_color),
-                        subtitle=ft.Text(f"IP: {servicio['ip']}", style=appFonts.BODY, color="grey"),
-                        trailing=ft.Container(
-                            content=ft.Text(estado, size=9, weight="bold", color="white"),
-                            bgcolor=palettet.red if estado == "Online" else "red",
-                            padding=ft.padding.symmetric(horizontal=8, vertical=4),
-                            border_radius=5
-                        ),
-                    ),
-                    
-                    ft.Divider(height=1, thickness=0.5, color=palettet.secundary),
-                    
-                
-                    ft.Container(
-                        padding=ft.padding.symmetric(vertical=10, horizontal=5),
-                        content=ft.Column([
-                          
-                            ft.Row([
-                                ft.Text("CPU", size=10, weight="bold", color=title_color),
-                                ft.Text(f"{int(cpu_val*100)}%", size=10, weight="bold", color=palettet.cpu),
-                            ], alignment=ft.MainAxisAlignment.SPACE_BETWEEN),
-                            ft.ProgressBar(value=cpu_val, color=palettet.cpu, bgcolor=ft.colors.BLACK12, height=8),
-                            
-                            ft.Container(height=8),
-                        
-                            ft.Row([
-                                ft.Text("RAM", size=10, weight="bold", color=title_color),
-                                ft.Text(f"{int(ram_val*100)}%", size=10, weight="bold", color=palettet.ram),
-                            ], alignment=ft.MainAxisAlignment.SPACE_BETWEEN),
-                            ft.ProgressBar(value=ram_val, color=palettet.ram, bgcolor=ft.colors.BLACK12, height=8),
-                        ])
-                    ),
-                    
-                    
-                    ft.Row([
-                        ft.Container(
-                            border=ft.border.all(1, palettet.secundary),
-                            border_radius=8,
-                            clip_behavior=ft.ClipBehavior.ANTI_ALIAS,
-                            width=200, 
-                            height=35,
-                            content=ft.Row([
-                                ft.Container(
-                                    expand=True,
-                                    content=ft.TextButton(
-                                        content=ft.Text("LOGS", size=9, weight="bold"),
-                                        style=btn_style,
-                                        on_click=lambda _, n=servicio["nombre"]: ir_a_metricas(n)
-                                    ),
-                                ),
-                                ft.VerticalDivider(width=1, color=palettet.secundary, thickness=1),
-                                ft.Container(
-                                    expand=True,
-                                    content=ft.TextButton(
-                                        content=ft.Text("WEB", size=9, weight="bold"),
-                                        style=btn_style,
-                                        on_click=lambda _, url=servicio["url"]: page.launch_url(url)
-                                    ),
-                                ),
-                            ], spacing=0)
-                        )
-                    ], alignment=ft.MainAxisAlignment.END)
-                ])
-            )
-        )
-
-  
-        cards.append(
-            ft.Container(
-                content=card_content,
-                on_hover=lambda e: setattr(e.control, "scale", 1.02 if e.data == "true" else 1.0) or e.control.update(),
-                animate=ft.animation.Animation(200, ft.AnimationCurve.EASE_OUT),
-            )
-        )
-
-    return ft.Container(
-        content=ft.Column([
-           
-            ft.Row([
-                ft.Image(src="logo_bel.png", width=50, height=50),
-                ft.Column([
-                    ft.Text("MONITOR DE INFRAESTRUCTURA", style=appFonts.HEADER, size=20, color=palettet.secundary),
-                    ft.Text("Visualización de métricas en tiempo real", style=appFonts.BODY, color="grey"),
-                ], spacing=0)
-            ]),
-            
-            ft.Divider(color=palettet.secundary, height=10),
-            
-          
-            ft.ResponsiveRow(
-                controls=[
-                    ft.Column([card], col={"sm": 12, "md": 6, "lg": 4}) for card in cards
+        chart = ft.BarChart(
+            bar_groups=[
+                ft.BarChartGroup(x=0, bar_rods=[cpu_rod]),
+                ft.BarChartGroup(x=1, bar_rods=[ram_rod]),
+                ft.BarChartGroup(x=2, bar_rods=[red_rod]),
+            ],
+            bottom_axis=ft.ChartAxis(
+                labels=[
+                    ft.ChartAxisLabel(value=0, label=ft.Text("C", size=8, weight="bold")),
+                    ft.ChartAxisLabel(value=1, label=ft.Text("R", size=8, weight="bold")),
+                    ft.ChartAxisLabel(value=2, label=ft.Text("N", size=8, weight="bold")),
                 ],
-                spacing=15,
-                run_spacing=15,
             ),
-        ], spacing=15, scroll=ft.ScrollMode.ADAPTIVE),
-        padding=20,
-        expand=True
+            max_y=110,
+            animate=1000,
+            height=80,
+            width=100,
+        )
+
+        status_text = ft.Text("...", size=9, weight="bold", color="white")
+        status_container = ft.Container(
+            content=status_text, bgcolor=ft.colors.GREY_400,
+            padding=ft.padding.symmetric(horizontal=8, vertical=4), border_radius=5
+        )
+
+        servicios_controles[servicio["nombre"]] = {
+            "cpu_rod": cpu_rod, "ram_rod": ram_rod, "red_rod": red_rod,
+            "status_container": status_container, "status_text": status_text
+        }
+
+        return ft.Container(
+            on_hover=lambda e: setattr(e.control, "scale", 1.02 if e.data == "true" else 1.0) or e.control.update(),
+            animate=ft.animation.Animation(200, ft.AnimationCurve.EASE_OUT),
+            content=ft.Card(
+                elevation=3,
+                content=ft.Container(
+                    padding=15, bgcolor=card_bg, border_radius=12,
+                    content=ft.Column([
+                        ft.ListTile(
+                            leading=ft.Icon(ft.icons.DNS_ROUNDED, color=palettet.secundary),
+                            title=ft.Text(servicio["nombre"], size=14, weight="bold"),
+                            subtitle=ft.Text(servicio["ip"], size=11),
+                            trailing=status_container,
+                        ),
+                        ft.Row([
+                            ft.Column([
+                                ft.Text("Rendimiento", size=10, weight="bold", opacity=0.7),
+                                chart
+                            ], expand=True),
+                            ft.VerticalDivider(),
+                            ft.Column([
+                                ft.IconButton(ft.icons.REMOVE_RED_EYE_ROUNDED, 
+                                            icon_color=palettet.accent,
+                                            on_click=lambda _: page.go(f"/logs/{servicio['nombre']}")),
+                                ft.IconButton(ft.icons.LANGUAGE_ROUNDED, 
+                                            icon_color=palettet.secundary,
+                                            on_click=lambda _: page.launch_url(servicio["url"])),
+                            ], alignment=ft.MainAxisAlignment.CENTER)
+                        ], height=100)
+                    ])
+                )
+            )
+        )
+
+    async def actualizar_dashboard():
+        for s in SERVICIOS_EMPRESA:
+            try:
+                m = obtener_metricas_reales(s["nombre"])
+                c = servicios_controles[s["nombre"]]
+                
+                c["cpu_rod"].to_y = m.get("cpu", 0)
+                c["ram_rod"].to_y = m.get("ram", 0)
+                c["red_rod"].to_y = m.get("red", 0)
+                
+                estado = m.get("estado", "Offline")
+                c["status_text"].value = estado
+                c["status_container"].bgcolor = palettet.red if estado == "Online" else "red"
+                page.update()
+            except:
+                pass
+
+    cards_ui = [ft.Column([crear_card_monitoreo(s)], col={"sm": 12, "md": 6, "lg": 4}) for s in SERVICIOS_EMPRESA]
+
+    layout = ft.Container(
+        content=ft.Column([
+            ft.Row([
+                ft.Image(src="logo_bel.png", width=40, height=40),
+                ft.Text("Monitor de infraestructura BEL", style=appFonts.HEADER, size=22),
+            ], alignment=ft.MainAxisAlignment.START),
+            ft.Divider(height=1),
+            ft.ResponsiveRow(controls=cards_ui, spacing=15),
+        ], scroll=ft.ScrollMode.ADAPTIVE),
+        padding=20, expand=True
     )
+
+    page.run_task(actualizar_dashboard)
+    return layout
