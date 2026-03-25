@@ -12,11 +12,10 @@ class Usuario(Base):
 class Logs(Base):
     __tablename__ = 'logs'
     id = Column(Integer, primary_key=True)
-    
+    servicio = Column(String(50)) 
     fecha = Column(DateTime, default=datetime.now) 
     nivel = Column(String(20)) 
     detalles = Column(JSON) 
-
 def crear_tablas():
 
     Base.metadata.create_all(bind=engine)

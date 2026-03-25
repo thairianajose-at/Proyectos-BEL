@@ -1,10 +1,13 @@
 from database.config import SessionLocal
 from database.modelo import Logs, Usuario
+from sqlalchemy import func
 
-def registrar_log(nivel, datos_dict):
+def registrar_log(servicio, nivel, datos_dict):
+    """Registra un evento vinculado a un servicio específico."""
     db = SessionLocal()
     try:
-        nuevo_log = Logs(nivel=nivel, detalles=datos_dict)
+        # Añadimos el campo 'servicio' para que la API pueda filtrar luego
+        nuevo_log = Logs(servicio=servicio, nivel=nivel, detalles=datos_dict)
         db.add(nuevo_log) 
         db.commit()
         db.refresh(nuevo_log)
@@ -16,11 +19,27 @@ def registrar_log(nivel, datos_dict):
     finally:
         db.close()
 
+# --- ESTA ES LA FUNCIÓN QUE SOLUCIONA EL ERROR DE LA API ---
+def obtener_logs_para_grafica(db_session, nombre_servicio):
+    """
+    Consulta la base de datos para contar cuántos logs hay de cada nivel
+    (INFO, WARNING, CRITICAL) para un servicio dado.
+    """
+    try:
+        stats = db_session.query(
+            Logs.nivel, 
+            func.count(Logs.id).label("total")
+        ).filter(Logs.servicio == nombre_servicio).group_by(Logs.nivel).all()
+        
+        # Lo convertimos a un diccionario simple para la API
+        return {s.nivel: s.total for s in stats}
+    except Exception as e:
+        print(f"Error en consulta de gráfica: {e}")
+        return {}
 
 def crear_usuario(username, password, rol="admin"):
     db = SessionLocal()
     try:
-      
         existe = db.query(Usuario).filter(Usuario.username == username).first()
         if existe:
             return None
@@ -38,21 +57,14 @@ def crear_usuario(username, password, rol="admin"):
         db.close()
 
 def validar_usuario(username, password):
-    """
-    Valida las credenciales. 
-    IMPORTANTE: No cerramos la sesión ANTES de retornar el objeto 
-    o usamos una técnica para mantener los datos en memoria.
-    """
     db = SessionLocal()
     try:
-        
         user = db.query(Usuario).filter(
             Usuario.username == username, 
             Usuario.password == password
         ).first()
         
         if user:
-        
             return {
                 "id": user.id,
                 "username": user.username,

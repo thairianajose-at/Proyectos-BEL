@@ -1,19 +1,12 @@
 import flet as ft
-import time
+import asyncio
 from controladores.crud import validar_usuario
 from utilidades.colors import palettet
-from utilidades.fonts import appFonts 
 
 def login_view(page: ft.Page):
-    page.fonts = appFonts.FONTS_DICT
     
-    
-    loading_ring = ft.ProgressRing(
-        width=20, height=20, stroke_width=2, 
-        color=palettet.primary, visible=False
-    )
-
-    def on_login_click(e):
+    # Lógica de inicio de sesión
+    async def on_login_click(e):
         user_val = user_input.value.strip()
         pass_val = pass_input.value.strip()
 
@@ -21,111 +14,128 @@ def login_view(page: ft.Page):
             mostrar_error("Por favor, llene todos los campos")
             return
 
-      
-        login_btn_control = btn_login.content 
-        login_btn_control.disabled = True
-        
-        login_btn_control.content = ft.Row(
-            [loading_ring, ft.Text(" VERIFICANDO...", weight="bold", color=palettet.primary)], 
-            alignment="center",
-            spacing=10
-        )
-        loading_ring.visible = True
+        btn_login.disabled = True
+        btn_text.value = "VERIFICANDO..."
         page.update()
         
-    
+        await asyncio.sleep(0.5)
         usuario = validar_usuario(user_val, pass_val)
 
         if usuario:
             page.session.set("user_name", usuario["username"])
-            page.session.set("user_role", usuario["rol"])
-            
-            login_btn_control.bgcolor = ft.colors.GREEN_600
-            login_btn_control.content = ft.Icon(ft.icons.CHECK_CIRCLE_OUTLINE_ROUNDED, color="white")
+            btn_login.bgcolor = ft.colors.GREEN_700
+            btn_text.value = "ACCESO EXITOSO"
             page.update()
-            
-            time.sleep(0.6) 
+            await asyncio.sleep(0.8) 
             page.go("/dashboard")
         else:
-            #
             mostrar_error("Usuario o contraseña incorrectos")
 
     def mostrar_error(mensaje):
-        login_btn_control = btn_login.content
-        login_btn_control.disabled = False
-        login_btn_control.content = ft.Text("INICIAR SESIÓN", weight="bold", color=palettet.primary)
-        loading_ring.visible = False
-        
-        
+        btn_login.disabled = False
+        btn_text.value = "INICIAR SESIÓN"
         page.snack_bar = ft.SnackBar(
-            content=ft.Text(mensaje, color="white"),
-            bgcolor=ft.colors.RED_ACCENT_400,
-            duration=3000,
+            content=ft.Text(mensaje, weight="bold", color=palettet.primary), 
+            bgcolor=ft.colors.RED_700
         )
         page.snack_bar.open = True  
         page.update()
 
-
+    # Inputs con estilo cápsula en Español
     user_input = ft.TextField(
-        label="Usuario", 
+        hint_text="Nombre de usuario",
         width=320,
-        border_radius=15,
-        prefix_icon=ft.icons.PERSON_ROUNDED,
-        focused_border_color=palettet.accent, 
-        on_submit=on_login_click 
+        height=50,
+        bgcolor=ft.colors.with_opacity(0.05, ft.colors.BLACK),
+        border_radius=25,
+        border_color=ft.colors.TRANSPARENT,
+        prefix_icon=ft.icons.PERSON_OUTLINE_ROUNDED,
+        cursor_color=palettet.secundary,
+        hint_style=ft.TextStyle(color=ft.colors.GREY_500),
+        text_style=ft.TextStyle(color=palettet.secundary),
+        focused_border_color=palettet.accent,
+        on_submit=on_login_click
     )
     
     pass_input = ft.TextField(
-        label="Contraseña", 
-        password=True, 
-        can_reveal_password=True, 
-        width=320, 
-        border_radius=15,
-        prefix_icon=ft.icons.LOCK_ROUNDED,
-        focused_border_color=palettet.accent, 
-        on_submit=on_login_click 
-    )
-    btn_login = ft.Container(
-        content=ft.ElevatedButton(
-            content=ft.Text("INICIAR SESIÓN", weight="bold", color=palettet.primary),
-            width=320,
-            height=50,
-            on_click=on_login_click,
-            style=ft.ButtonStyle(
-                shape=ft.RoundedRectangleBorder(radius=12),
-                bgcolor={
-                    "": palettet.accent,           
-                    "hovered": palettet.secundary,  
-                    "disabled": palettet.accent,    
-                },
-                color={"": palettet.primary},
-                elevation={"hovered": 8, "": 2},
-            )
-        ),
-        on_hover=lambda e: setattr(e.control, "scale", 1.02 if e.data == "true" else 1.0) or e.control.update(),
-        animate_scale=ft.animation.Animation(300, ft.AnimationCurve.DECELERATE),
+        hint_text="Contraseña",
+        password=True,
+        can_reveal_password=True,
+        width=320,
+        height=50,
+        bgcolor=ft.colors.with_opacity(0.05, ft.colors.BLACK),
+        border_radius=25,
+        border_color=ft.colors.TRANSPARENT,
+        prefix_icon=ft.icons.LOCK_OUTLINE_ROUNDED,
+        cursor_color=palettet.secundary,
+        hint_style=ft.TextStyle(color=ft.colors.GREY_500),
+        text_style=ft.TextStyle(color=palettet.secundary),
+        focused_border_color=palettet.accent,
+        on_submit=on_login_click
     )
 
-    return ft.Container(
-        content=ft.Column(
-            [
-                ft.Container(height=40), 
-                ft.Image(src="logo_bel.png", width=140, height=140, fit=ft.ImageFit.CONTAIN),
-                ft.Text("SISTEMA DE MONITOREO", style=appFonts.HEADER, size=24, color=ft.colors.BLUE_GREY_900),
-                ft.Text("Infraestructura & Data Center", style=appFonts.BODY, color="grey", italic=True),
-                ft.Container(height=30),
-                user_input,
-                pass_input,
-                ft.Container(height=10),
-                btn_login,
-                ft.Container(expand=True), 
-                ft.Text("© 2026 Corporación BEL - DevOps Unit", style=appFonts.BODY, size=11, opacity=0.5),
-                ft.Container(height=10)
-            ],
-            horizontal_alignment=ft.CrossAxisAlignment.CENTER,
-        ),
-        padding=40,
+    btn_text = ft.Text("INICIAR SESIÓN", weight="bold", color=palettet.primary)
+    
+    btn_login = ft.ElevatedButton(
+        content=btn_text,
+        width=320,
+        height=50,
+        on_click=on_login_click,
+        style=ft.ButtonStyle(
+            shape=ft.RoundedRectangleBorder(radius=25),
+            bgcolor={"": palettet.accent, ft.MaterialState.HOVERED: palettet.secundary},
+            elevation={"": 2, ft.MaterialState.HOVERED: 8},
+        )
+    )
+
+    return ft.Row(
         expand=True,
-        alignment=ft.alignment.center,
-        bgcolor=ft.colors.GREY_50 if page.theme_mode == ft.ThemeMode.LIGHT else ft.colors.BLACK
+        spacing=0,
+        controls=[
+            # Lado Izquierdo: Formulario
+            ft.Container(
+                expand=True,
+                bgcolor=palettet.primary,
+                content=ft.Column(
+                    [
+                        ft.Image(src="logo_bel.png", width=90),
+                        ft.Text("ACCESO DE USUARIO", size=26, weight="bold", color=palettet.secundary),
+                        ft.Text("Sistema de Monitoreo JAC & BEL", size=12, color=ft.colors.GREY_600),
+                        ft.Container(height=30),
+                        user_input,
+                        ft.Container(height=10),
+                        pass_input,
+                        ft.Container(height=25),
+                        btn_login,
+                    ],
+                    alignment=ft.MainAxisAlignment.CENTER,
+                    horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                )
+            ),
+            # Lado Derecho: Visual Informativo
+            ft.Container(
+                expand=True,
+                gradient=ft.LinearGradient(
+                    begin=ft.alignment.top_left,
+                    end=ft.alignment.bottom_right,
+                    colors=[palettet.accent, palettet.secundary],
+                ),
+                content=ft.Column(
+                    [
+                        ft.Icon(ft.icons.SECURITY_ROUNDED, size=110, color=ft.colors.with_opacity(0.1, palettet.primary)),
+                        ft.Text("JAC & BEL", color=palettet.primary, size=32, weight="bold"),
+                        ft.Container(
+                            padding=8,
+                            border=ft.border.all(1, ft.colors.with_opacity(0.3, palettet.primary)),
+                            border_radius=8,
+                            content=ft.Text("MONITOR DEVOPS v2.0", color=palettet.primary, size=10, weight="bold"),
+                        ),
+                        ft.Container(height=15),
+                        ft.Text("Gestión Segura de Infraestructura", color=palettet.primary, size=13, opacity=0.6),
+                    ],
+                    alignment=ft.MainAxisAlignment.CENTER,
+                    horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                )
+            )
+        ]
     )
