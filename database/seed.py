@@ -1,6 +1,5 @@
 from database.config import SessionLocal, engine
 from database.modelo import Base, Usuario 
-from sqlalchemy.orm import Session
 
 Base.metadata.create_all(bind=engine)
 

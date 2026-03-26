@@ -7,23 +7,17 @@ SERVICIOS_EMPRESA = [
 ]
 
 def obtener_metricas_reales(nombre_servicio):
-    
     servicio = next((s for s in SERVICIOS_EMPRESA if s["nombre"] == nombre_servicio), None)
     
     if not servicio:
-        return {"error": "Servicio no encontrado en la lista de BEL"}
+        return {"error": "Servicio no encontrado"}
 
+    
     return {
         "nombre": nombre_servicio,
         "ip": servicio["ip"],
-        "cpu": random.randint(10, 85), 
-        "ram": random.randint(20, 90),
+        "cpu": random.randint(10, 100), 
+        "ram": random.randint(20, 100),
         "red": random.randint(5, 100),
-        "estado": "Online" if random.random() > 0.1 else "Offline"
+        "estado": "Online" if random.random() > 0.05 else "Offline"
     }
-
-LOGS_SIMULADOS = {
-    "10.0.0.50": [10, 15, 11], 
-    "10.0.0.51": [9, 12],
-    "10.0.0.52": [8],
-}

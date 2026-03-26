@@ -4,8 +4,7 @@ from controladores.crud import validar_usuario
 from utilidades.colors import palettet
 
 def login_view(page: ft.Page):
-    
-    # Lógica de inicio de sesión
+
     async def on_login_click(e):
         user_val = user_input.value.strip()
         pass_val = pass_input.value.strip()
@@ -41,7 +40,6 @@ def login_view(page: ft.Page):
         page.snack_bar.open = True  
         page.update()
 
-    # Inputs con estilo cápsula en Español
     user_input = ft.TextField(
         hint_text="Nombre de usuario",
         width=320,
@@ -92,15 +90,14 @@ def login_view(page: ft.Page):
         expand=True,
         spacing=0,
         controls=[
-            # Lado Izquierdo: Formulario
             ft.Container(
                 expand=True,
                 bgcolor=palettet.primary,
                 content=ft.Column(
                     [
                         ft.Image(src="logo_bel.png", width=90),
-                        ft.Text("ACCESO DE USUARIO", size=26, weight="bold", color=palettet.secundary),
-                        ft.Text("Sistema de Monitoreo JAC & BEL", size=12, color=ft.colors.GREY_600),
+                        ft.Text("Acceso de usuario", size=26, weight="bold", color=palettet.secundary),
+                        ft.Text("Sistema de monitoreo JAC & BEL", size=12, color=ft.colors.GREY_600),
                         ft.Container(height=30),
                         user_input,
                         ft.Container(height=10),
@@ -112,7 +109,6 @@ def login_view(page: ft.Page):
                     horizontal_alignment=ft.CrossAxisAlignment.CENTER,
                 )
             ),
-            # Lado Derecho: Visual Informativo
             ft.Container(
                 expand=True,
                 gradient=ft.LinearGradient(
@@ -122,7 +118,12 @@ def login_view(page: ft.Page):
                 ),
                 content=ft.Column(
                     [
-                        ft.Icon(ft.icons.SECURITY_ROUNDED, size=110, color=ft.colors.with_opacity(0.1, palettet.primary)),
+                     
+                        ft.Icon(
+                            ft.icons.ANALYTICS_ROUNDED, 
+                            size=110, 
+                            color=palettet.primary
+                        ),
                         ft.Text("JAC & BEL", color=palettet.primary, size=32, weight="bold"),
                         ft.Container(
                             padding=8,
@@ -131,7 +132,7 @@ def login_view(page: ft.Page):
                             content=ft.Text("MONITOR DEVOPS v2.0", color=palettet.primary, size=10, weight="bold"),
                         ),
                         ft.Container(height=15),
-                        ft.Text("Gestión Segura de Infraestructura", color=palettet.primary, size=13, opacity=0.6),
+                        ft.Text("Gestión de infraestructura y métricas", color=palettet.primary, size=13, opacity=0.6),
                     ],
                     alignment=ft.MainAxisAlignment.CENTER,
                     horizontal_alignment=ft.CrossAxisAlignment.CENTER,
@@ -139,3 +140,4 @@ def login_view(page: ft.Page):
             )
         ]
     )
+

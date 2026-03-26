@@ -64,19 +64,19 @@ def main(page: ft.Page):
                         toolbar_height=70,
                         bgcolor=palettet.secundary,
                         elevation=0,
-                        # --- CAMBIO AQUÍ: Eliminamos leading y title, y movemos el logo ---
+                        
                         leading_width=70,
-                        leading=None, # Quitamos el leading estándar
+                        leading=None, 
                         title=ft.Row([
                             ft.Container(
                                 padding=ft.padding.only(left=10),
                                 content=ft.Image(src="logo_bel.png", fit="contain", height=40)
                             ),
-                            # El título ya no tiene texto, solo el logo
+                            
                         ], alignment="start"),
                         center_title=False,
                         actions=[
-                            # INFO DEL OPERADOR ESTILO CÁPSULA
+                            
                             ft.Container(
                                 bgcolor=ft.colors.with_opacity(0.15, ft.colors.WHITE),
                                 padding=ft.padding.symmetric(horizontal=15, vertical=8),
