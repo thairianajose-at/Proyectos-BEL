@@ -1,33 +1,24 @@
-from database.config import SessionLocal, engine
-from database.modelo import Base, Usuario 
+from database.config import SessionLocal
+from database.modelo import Usuario
+from controladores.crud import crear_usuario
 
-Base.metadata.create_all(bind=engine)
-
-def insertar_usuarios_iniciales():
+def ejecutar_seed():
     db = SessionLocal()
     try:
-        usuarios = [
-            {"username": "admin", "password": "1234", "rol": "Administrador"},
-            {"username": "wilder1", "password": "wilder1234", "rol": "Devops"},
-            {"username": "ricardo", "password": "felizcumpleaños", "rol": "Devops"}
-        ]
+        # veo si la tabla de usuarios está vacía para no duplicar datos
+        if not db.query(Usuario).first():
+            # Usuario Administrador (Acceso Técnico Total)
+            crear_usuario("Yulimar", "admin123", rol="admin")
+            # Usuario DevOps
+            crear_usuario("Wilder", "wilder1234", rol="admin")
+            # Usuario Gerencia Para visualización de métricas
+            crear_usuario("Mixyeli", "bel2026", rol="gerencia")
+            crear_usuario("Javier", "bel2026", rol="gerencia")
+            crear_usuario("Merwin", "corpobel13", rol="admin")
+            crear_usuario("Ricardo", "corpobel", rol="admin")
 
-        for u in usuarios:
-            existe = db.query(Usuario).filter(Usuario.username == u["username"]).first()
-            if not existe:
-                nuevo_usuario = Usuario(
-                    username=u["username"],
-                    password=u["pass"], 
-                    rol=u["rol"]
-                )
-                db.add(nuevo_usuario)
-        
-        db.commit()
-        print(" Usuarios de Corporación BEL insertados con éxito.")
+
     except Exception as e:
-        print(f"Error: {e}")
+        print(f"Error al inicializar datos (Seed): {e}")
     finally:
         db.close()
-
-if __name__ == "__main__":
-    insertar_usuarios_iniciales()

@@ -21,7 +21,10 @@ def login_view(page: ft.Page):
         usuario = validar_usuario(user_val, pass_val)
 
         if usuario:
+            # GUARDAR ROL Y NOMBRE 
             page.session.set("user_name", usuario["username"])
+            page.session.set("user_rol", usuario.get("rol", "admin")) # se guarda el rol (default admin si no existe)
+            
             btn_login.bgcolor = ft.colors.GREEN_700
             btn_text.value = "ACCESO EXITOSO"
             page.update()
@@ -42,8 +45,7 @@ def login_view(page: ft.Page):
 
     user_input = ft.TextField(
         hint_text="Nombre de usuario",
-        width=320,
-        height=50,
+        width=320, height=50,
         bgcolor=ft.colors.with_opacity(0.05, ft.colors.BLACK),
         border_radius=25,
         border_color=ft.colors.TRANSPARENT,
@@ -57,10 +59,8 @@ def login_view(page: ft.Page):
     
     pass_input = ft.TextField(
         hint_text="Contraseña",
-        password=True,
-        can_reveal_password=True,
-        width=320,
-        height=50,
+        password=True, can_reveal_password=True,
+        width=320, height=50,
         bgcolor=ft.colors.with_opacity(0.05, ft.colors.BLACK),
         border_radius=25,
         border_color=ft.colors.TRANSPARENT,
@@ -76,8 +76,7 @@ def login_view(page: ft.Page):
     
     btn_login = ft.ElevatedButton(
         content=btn_text,
-        width=320,
-        height=50,
+        width=320, height=50,
         on_click=on_login_click,
         style=ft.ButtonStyle(
             shape=ft.RoundedRectangleBorder(radius=25),
@@ -90,6 +89,7 @@ def login_view(page: ft.Page):
         expand=True,
         spacing=0,
         controls=[
+            # PANEL IZQUIERDO: FORMULARIO
             ft.Container(
                 expand=True,
                 bgcolor=palettet.primary,
@@ -109,6 +109,7 @@ def login_view(page: ft.Page):
                     horizontal_alignment=ft.CrossAxisAlignment.CENTER,
                 )
             ),
+            # PANEL DERECHO: VISUAL CON TONALIDAD Y BURBUJAS
             ft.Container(
                 expand=True,
                 gradient=ft.LinearGradient(
@@ -116,28 +117,52 @@ def login_view(page: ft.Page):
                     end=ft.alignment.bottom_right,
                     colors=[palettet.accent, palettet.secundary],
                 ),
-                content=ft.Column(
-                    [
-                     
-                        ft.Icon(
-                            ft.icons.ANALYTICS_ROUNDED, 
-                            size=110, 
-                            color=palettet.primary
-                        ),
-                        ft.Text("JAC & BEL", color=palettet.primary, size=32, weight="bold"),
-                        ft.Container(
-                            padding=8,
-                            border=ft.border.all(1, ft.colors.with_opacity(0.3, palettet.primary)),
-                            border_radius=8,
-                            content=ft.Text("MONITOR DEVOPS v2.0", color=palettet.primary, size=10, weight="bold"),
-                        ),
-                        ft.Container(height=15),
-                        ft.Text("Gestión de infraestructura y métricas", color=palettet.primary, size=13, opacity=0.6),
-                    ],
-                    alignment=ft.MainAxisAlignment.CENTER,
-                    horizontal_alignment=ft.CrossAxisAlignment.CENTER,
-                )
+                content=ft.Stack([
+                    # Burbujas decorativas
+                    ft.Container(
+                        width=200, height=200,
+                        bgcolor=ft.colors.with_opacity(0.1, palettet.primary),
+                        border_radius=100, top=-60, right=-60,
+                    ),
+                    ft.Container(
+                        width=120, height=120,
+                        bgcolor=ft.colors.with_opacity(0.05, palettet.primary),
+                        border_radius=60, bottom=-30, left=-30,
+                    ),
+                    # Contenido Central Resaltado
+                    ft.Container(
+                        alignment=ft.alignment.center,
+                        content=ft.Column(
+                            [
+                                ft.Container(
+                                    content=ft.Icon(
+                                        ft.icons.ANALYTICS_ROUNDED, 
+                                        size=110, color=palettet.primary
+                                    ),
+                                    padding=20,
+                                    border_radius=35,
+                                    bgcolor=ft.colors.with_opacity(0.15, palettet.primary),
+                                    border=ft.border.all(1, ft.colors.with_opacity(0.2, palettet.primary)),
+                                ),
+                                ft.Container(height=20),
+                                ft.Text("JAC & BEL", color=palettet.primary, size=32, weight="bold"),
+                                ft.Container(
+                                    padding=8,
+                                    border=ft.border.all(1, ft.colors.with_opacity(0.3, palettet.primary)),
+                                    border_radius=8,
+                                    content=ft.Text("MONITOR DEVOPS v2.0", color=palettet.primary, size=10, weight="bold"),
+                                ),
+                                ft.Container(height=15),
+                                ft.Text(
+                                    "Gestión de infraestructura y métricas", 
+                                    color=palettet.primary, size=13, opacity=0.8
+                                ),
+                            ],
+                            alignment=ft.MainAxisAlignment.CENTER,
+                            horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                        )
+                    )
+                ])
             )
         ]
     )
-

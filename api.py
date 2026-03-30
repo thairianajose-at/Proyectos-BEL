@@ -1,18 +1,18 @@
 from fastapi import FastAPI, HTTPException
-from fastapi.middleware.cors import CORSMiddleware # IMPORTANTE
+from fastapi.middleware.cors import CORSMiddleware 
 from urllib.parse import unquote
-import uvicorn # Para lanzarla correctamente
+import uvicorn 
 from controladores.crud import registrar_log, obtener_logs_para_grafica
 from services.zabbix import obtener_metricas_reales, SERVICIOS_EMPRESA
 
 app = FastAPI()
 
-# --- CONFIGURACIÓN DE CORS (Soluciona el rechazo en Web) ---
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Permite que cualquier IP (tu dashboard) se conecte
+    allow_origins=["*"], 
     allow_credentials=True,
-    allow_methods=["*"],  # Permite GET, POST, etc.
+    allow_methods=["*"],  
     allow_headers=["*"],
 )
 
@@ -45,7 +45,7 @@ def enviar_metricas_historicas():
     logs = obtener_logs_para_grafica()
     return logs
 
-# --- LANZADOR DE LA API ---
+
 if __name__ == "__main__":
-    # host="0.0.0.0" permite que la API sea vista en toda la red de la empresa
+    
     uvicorn.run(app, host="0.0.0.0", port=8000)

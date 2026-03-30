@@ -2,11 +2,8 @@ import flet as ft
 import asyncio
 import sys
 import warnings
-import socket
-from database.modelo import crear_tablas, Usuario
-from database.config import SessionLocal, engine
-from controladores.crud import crear_usuario
-
+from database.modelo import crear_tablas
+from database.seed import ejecutar_seed # Nueva importación limpia
 from utilidades.colors import palettet
 from utilidades.fonts import appFonts
 from views.login_view import login_view
@@ -23,13 +20,7 @@ if sys.platform == 'win32':
 
 def inicializar_sistema():
     crear_tablas()  
-    db = SessionLocal()
-    try:
-        if not db.query(Usuario).first():
-            crear_usuario("admin", "admin123", rol="admin")
-            crear_usuario("wilder1", "wilder1234", rol="devops")
-    finally:
-        db.close()
+    ejecutar_seed() # Llamamos al archivo seed externo
 
 def main(page: ft.Page):
     inicializar_sistema()
@@ -45,13 +36,17 @@ def main(page: ft.Page):
     def route_change(e):
         page.views.clear()
         
-        # --- LOGIN ---
+        # Obtenemos datos de la sesión para los Roles
+        user_rol = page.session.get("user_rol")
+        user_name = page.session.get("user_name")
+        
+        #RUTA: LOGIN
         if page.route == "/":
             page.views.append(ft.View("/", [login_view(page)], padding=0))
      
-        # --- DASHBOARD ---
+        # RUTA: DASHBOARD 
         elif page.route == "/dashboard":
-            if not page.session.get("user_name"):
+            if not user_name:
                 page.go("/")
                 return
 
@@ -64,19 +59,15 @@ def main(page: ft.Page):
                         toolbar_height=70,
                         bgcolor=palettet.secundary,
                         elevation=0,
-                        
                         leading_width=70,
-                        leading=None, 
                         title=ft.Row([
                             ft.Container(
                                 padding=ft.padding.only(left=10),
                                 content=ft.Image(src="logo_bel.png", fit="contain", height=40)
                             ),
-                            
                         ], alignment="start"),
                         center_title=False,
                         actions=[
-                            
                             ft.Container(
                                 bgcolor=ft.colors.with_opacity(0.15, ft.colors.WHITE),
                                 padding=ft.padding.symmetric(horizontal=15, vertical=8),
@@ -84,7 +75,8 @@ def main(page: ft.Page):
                                 border=ft.border.all(1, ft.colors.with_opacity(0.2, "white")),
                                 content=ft.Row([
                                     ft.Icon(ft.icons.PERSON_PIN_ROUNDED, color=palettet.primary, size=18),
-                                    ft.Text(f"{page.session.get('user_name')}".upper(), color=palettet.primary, weight="w500", size=12),
+                                    # Mostramos Nombre y Rol para verificar
+                                    ft.Text(f"{user_name} ({user_rol})".upper(), color=palettet.primary, weight="w500", size=12),
                                 ], spacing=8)
                             ),
                             ft.IconButton(
@@ -99,8 +91,13 @@ def main(page: ft.Page):
                 )
             )
         
-        # --- LOGS ---
+        # RUTA: LOGS (Protegida por Rol Admin)
         elif page.route.startswith("/logs/"):
+            # Si un usuario con rol 'gerencia' intenta entrar, se devuelve
+            if user_rol != "admin":
+                page.go("/dashboard")
+                return
+
             nombre_raw = page.route.split("/")[-1]
             nombre_app = nombre_raw.replace("%20", " ").replace("+", " ")
             
@@ -113,7 +110,11 @@ def main(page: ft.Page):
                         toolbar_height=70,
                         bgcolor=palettet.secundary,
                         elevation=0,
-                        leading=ft.IconButton(ft.icons.ARROW_BACK_IOS_NEW_ROUNDED, icon_color="white", on_click=lambda _: page.go("/dashboard")),
+                        leading=ft.IconButton(
+                            ft.icons.ARROW_BACK_IOS_NEW_ROUNDED, 
+                            icon_color="white", 
+                            on_click=lambda _: page.go("/dashboard")
+                        ),
                         title=ft.Text(f"LOGS: {nombre_app}".upper(), color="white", weight="bold", size=18),
                         center_title=True,
                     )

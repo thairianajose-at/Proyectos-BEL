@@ -6,7 +6,7 @@ def registrar_log(servicio, nivel, datos_dict):
     """Registra un evento vinculado a un servicio específico."""
     db = SessionLocal()
     try:
-        # Añadimos el campo 'servicio' para que la API pueda filtrar luego
+        
         nuevo_log = Logs(servicio=servicio, nivel=nivel, detalles=datos_dict)
         db.add(nuevo_log) 
         db.commit()
@@ -19,7 +19,6 @@ def registrar_log(servicio, nivel, datos_dict):
     finally:
         db.close()
 
-# --- ESTA ES LA FUNCIÓN QUE SOLUCIONA EL ERROR DE LA API ---
 def obtener_logs_para_grafica(db_session, nombre_servicio):
     """
     Consulta la base de datos para contar cuántos logs hay de cada nivel
@@ -31,7 +30,6 @@ def obtener_logs_para_grafica(db_session, nombre_servicio):
             func.count(Logs.id).label("total")
         ).filter(Logs.servicio == nombre_servicio).group_by(Logs.nivel).all()
         
-        # Lo convertimos a un diccionario simple para la API
         return {s.nivel: s.total for s in stats}
     except Exception as e:
         print(f"Error en consulta de gráfica: {e}")
