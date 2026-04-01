@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, DateTime, JSON
+from sqlalchemy import Column, Integer, String, DateTime, JSON, Float
 from datetime import datetime
 from .config import Base, engine
 
@@ -14,8 +14,16 @@ class Logs(Base):
     id = Column(Integer, primary_key=True)
     servicio = Column(String(50)) 
     fecha = Column(DateTime, default=datetime.now) 
-    nivel = Column(String(20)) 
+    nivel = Column(String(20)) # INFO, WARNING, CRITICAL
     detalles = Column(JSON) 
-def crear_tablas():
 
+class MetricasHistoricas(Base):
+    __tablename__ = 'metricas_historicas'
+    id = Column(Integer, primary_key=True)
+    servicio = Column(String(50))
+    cpu = Column(Float)
+    ram = Column(Float)
+    fecha = Column(DateTime, default=datetime.now)
+
+def crear_tablas():
     Base.metadata.create_all(bind=engine)

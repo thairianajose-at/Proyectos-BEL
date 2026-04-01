@@ -1,19 +1,23 @@
 import flet as ft
 import asyncio
+import requests
 from services.zabbix import SERVICIOS_EMPRESA, obtener_metricas_reales
 from utilidades.colors import palettet
 from utilidades.fonts import appFonts
 
-#CONFIGURACIÓN DE UMBRALES (ADMIN) 
+# URL real de la infraestructura de Bel Online
+API_URL_REAL = "http://172.17.16.18:8000/api/containers"
+
+# CONFIGURACIÓN DE UMBRALES (ADMIN) 
 CONFIG_SERVICIOS = {s["nombre"]: {"metrica": "cpu", "valor": 85} for s in SERVICIOS_EMPRESA}
 
 def dashboard_view(page: ft.Page):
-    # Recuperación de Sesión y Roles
-    user_rol = page.session.get("user_rol")
-    user_name = page.session.get("user_name")
+    # Sesión y Roles (Corregido para evitar errores de argumentos)
+    user_rol = page.session.get("user_rol") or "Invitado"
+    user_name = page.session.get("user_name") or "Usuario"
     
-    es_admin = user_rol == "admin"
-    es_gerente = user_rol == "gerente"
+    es_admin = user_rol.lower() == "admin"
+    es_gerente = user_rol.lower() == "gerente"
 
     page.fonts = appFonts.FONTS_DICT
     page.bgcolor = "#F5F7F9"
@@ -25,7 +29,6 @@ def dashboard_view(page: ft.Page):
     # NAVEGACIÓN WEB CORREGIDA 
     def abrir_web(e, url_destino):
         if url_destino:
-            # Si no tiene http, se lo agregamos para que el navegador no falle
             if not url_destino.startswith("http"):
                 url_destino = f"https://{url_destino}"
             page.launch_url(url_destino)
@@ -102,18 +105,8 @@ def dashboard_view(page: ft.Page):
             "red_sec": red_p.sections, "red_val": red_t, "dot": status_dot, "container": card_container
         }
 
-        # CAPTURA DE URL INDIVIDUAL
         url_actual = servicio.get("url")
-
-        # BOTONES: La flecha siempre está y ahora TIENE ACCIÓN
-        btns = [
-            ft.IconButton(
-                ft.icons.OPEN_IN_NEW_ROUNDED, 
-                icon_size=18, 
-                tooltip="Abrir Web",
-                on_click=lambda e: abrir_web(e, url_actual) 
-            )
-        ]
+        btns = [ft.IconButton(ft.icons.OPEN_IN_NEW_ROUNDED, icon_size=18, tooltip="Abrir Web", on_click=lambda e: abrir_web(e, url_actual))]
 
         if es_admin:
             btns.append(ft.IconButton(ft.icons.INSERT_CHART_OUTLINED_ROUNDED, icon_size=18, on_click=lambda _: page.go(f"/logs/{servicio['nombre']}"), tooltip="Ver Logs"))
@@ -127,16 +120,38 @@ def dashboard_view(page: ft.Page):
         ], spacing=5)
         return ft.Container(content=card_container, col={"sm": 12, "md": 6, "lg": 4})
 
-    # BUCLE EN TIEMPO REAL 
+    # BUCLE EN TIEMPO REAL CON CONEXIÓN REAL
     async def actualizar_datos():
         while True:
             on_count = 0
             new_groups, new_labels = [], []
             m_global = dropdown_global.value 
 
+            # Se intenta obtener los datos de la API una sola vez por ciclo
+            try:
+                res = requests.get(API_URL_REAL, timeout=2)
+                api_data = res.json()
+            except:
+                api_data = []
+
             for i, s in enumerate(SERVICIOS_EMPRESA):
                 try:
-                    data = obtener_metricas_reales(s["nombre"])
+                    #Se busca en los datos de la API el contenedor que coincida
+                    # Si no lo encuentra, usaremos la función original como backup (random)
+                    container_real = next((c for c in api_data if c.get("name") == s["nombre"]), None)
+                    
+                    if container_real:
+                        metrics = container_real.get("health", {}).get("metrics", {})
+                        data = {
+                            "cpu": metrics.get("cpu_percent", 0),
+                            "ram": metrics.get("memory_percent", 0),
+                            "red": 15, # Valor base para red ya que la API no da porcentaje
+                            "estado": "Online" if container_real.get("running") else "Offline"
+                        }
+                    else:
+                        # Backup: Usamos la función original si la API no tiene ese servicio
+                        data = obtener_metricas_reales(s["nombre"])
+
                     ctrl = servicios_controles[s["nombre"]]
                     conf = CONFIG_SERVICIOS[s["nombre"]]
 
@@ -168,7 +183,7 @@ def dashboard_view(page: ft.Page):
             page.update()
             await asyncio.sleep(5)
 
-    # ENSAMBLADO DE VISTA
+    # ENSAMBLADO DE VISTA (Header, Panel Macro y Layout)
     header = ft.Container(
         gradient=ft.LinearGradient(colors=[palettet.accent, palettet.secundary]),
         padding=30, border_radius=ft.border_radius.only(bottom_left=30, bottom_right=30),
