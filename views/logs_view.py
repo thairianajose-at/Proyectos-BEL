@@ -1,5 +1,5 @@
 import flet as ft
-from services.zabbix import obtener_metricas_reales
+from services.lector_api import obtener_metricas_reales
 from utilidades.colors import palettet
 from utilidades.fonts import appFonts 
 

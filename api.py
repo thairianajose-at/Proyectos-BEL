@@ -4,7 +4,7 @@ from urllib.parse import unquote
 import uvicorn 
 import requests
 from controladores.crud import registrar_log, guardar_metrica_tiempo_real, obtener_indicadores_gerencia, obtener_logs_para_grafica
-from services.zabbix import obtener_metricas_reales, SERVICIOS_EMPRESA
+from services.lector_api import obtener_metricas_reales, SERVICIOS_EMPRESA
 from database.config import SessionLocal
 
 app = FastAPI()
