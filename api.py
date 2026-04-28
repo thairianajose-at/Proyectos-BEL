@@ -8,7 +8,9 @@ from services.lector_api import obtener_metricas_reales, SERVICIOS_EMPRESA
 from database.config import SessionLocal
 
 app = FastAPI()
-URL_INFRA = "http://172.17.16.18:8000/api/containers"
+
+# IP Real
+URL_INFRA_REAL = "http://172.17.16.18:8000/api/containers" 
 
 app.add_middleware(
     CORSMiddleware,
@@ -21,57 +23,56 @@ app.add_middleware(
 @app.get("/")
 def home():
     return {
-        "status": "Monitor de Infraestructura Bel Online",
-        "servicios_disponibles": [s["nombre"] for s in SERVICIOS_EMPRESA]
+        "status": "Monitor de Infraestructura Bel Online - Híbrido",
+        "servicios": [s["nombre"] for s in SERVICIOS_EMPRESA]
     }
-
-@app.post("/enviar-log")
-def recibir_log(nivel: str, datos: dict):
-    # Usamos el nombre del servicio desde los datos si viene, sino genérico
-    servicio = datos.get("servicio", "General")
-    res = registrar_log(servicio, nivel, datos)
-    return {"message": "Log guardado", "id": res.id if res else 0}
 
 @app.get("/metricas/{nombre_app}")
 async def enviar_metricas_especificas(nombre_app: str):
     nombre_limpio = unquote(nombre_app)
     datos_finales = None
     
+    # logica de resilencia
     try:
-        res = requests.get(URL_INFRA, timeout=2)
+        # Intentamos conexión directa 
+        res = requests.get(URL_INFRA_REAL, timeout=2.0)
         contenedores = res.json()
         match = next((c for c in contenedores if c.get("name") == nombre_limpio), None)
         
         if match:
-            metrics = match.get("health", {}).get("metrics", {})
+            m = match.get("health", {}).get("metrics", {})
+            running = match.get("running", False)
             datos_finales = {
                 "nombre": nombre_limpio,
-                "cpu": metrics.get("cpu_percent", 0),
-                "ram": metrics.get("memory_percent", 0),
-                "red": 10,
-                "estado": "Online" if match.get("running") else "Offline"
+                "cpu": round(m.get("cpu_percent", 0), 1),
+                "ram": round(m.get("memory_percent", 0), 1),
+                "dl": round(m.get("disk_read_mbs", 0), 1),
+                "de": round(m.get("disk_write_mbs", 0), 1),
+                "red": round(m.get("network_down_mbps", 0), 1),
+                "estado": "Online" if running else "Offline"
             }
-    except:
+    except Exception as e:
+        # Si Fortinet bloquea o hay timeout, usamos el lector_api 
+        print(f"Conexión directa fallida: {e}. Usando respaldo...")
         datos_finales = obtener_metricas_reales(nombre_limpio)
 
     if datos_finales:
-        # LOGICA AUTOMÁTICA DE ALERTAS Y REGISTRO
-        if datos_finales["estado"] == "Offline":
-            registrar_log(nombre_limpio, "CRITICAL", {"evento": "Servicio Caído"})
-        
-        if datos_finales["cpu"] > 85:
-            registrar_log(nombre_limpio, "WARNING", {"evento": "CPU Crítico", "valor": datos_finales["cpu"]})
+        # alertas automaticas
+        if datos_finales.get("estado") == "Offline":
+            registrar_log(nombre_limpio, "CRITICAL", {"evento": "DOWNTIME DETECTADO"})
+        elif datos_finales.get("cpu", 0) > 90:
+            registrar_log(nombre_limpio, "WARNING", {"evento": "CPU SATURADO", "valor": datos_finales["cpu"]})
 
-        # Guardar historial para gráficas
+        #persistencia
         guardar_metrica_tiempo_real(nombre_limpio, datos_finales["cpu"], datos_finales["ram"])
         
-        # Inyectar indicadores de gerencia (Uptime e Incidencias)
+        # Indicadores gerencia(Uptime/Incidencias)
         indicadores = obtener_indicadores_gerencia(nombre_limpio)
         datos_finales.update(indicadores)
         
         return datos_finales
 
-    raise HTTPException(status_code=404, detail="Servicio no encontrado")
+    raise HTTPException(status_code=404, detail="Servicio no hallado")
 
 @app.get("/metricas-historicas/{nombre_app}")
 def enviar_metricas_historicas(nombre_app: str):

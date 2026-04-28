@@ -5,9 +5,9 @@ from utilidades.colors import palettet
 
 def login_view(page: ft.Page):
     
-    # --- VALIDACIÓN DE SESIÓN PREVIA ---
+    # Validacion de sesion 
     # Si el usuario ya tiene sesión activa y por algún motivo llega aquí, 
-    # lo mandamos directo al dashboard.
+    # lo manda directo al dashboard.
     if page.session.get("user_name"):
         page.go("/dashboard")
 
@@ -15,7 +15,7 @@ def login_view(page: ft.Page):
         user_val = user_input.value.strip()
         pass_val = pass_input.value.strip()
 
-        # 1. Validación de campos vacíos
+        #  Validación de campos vacíos
         if not user_val or not pass_val:
             mostrar_error("Por favor, llene todos los campos")
             return
@@ -30,14 +30,14 @@ def login_view(page: ft.Page):
         await asyncio.sleep(0.5)
         
         try:
-            # 2. Validación contra Base de Datos
+            # Validación contra Base de Datos
             usuario = validar_usuario(user_val, pass_val)
 
             if usuario:
-                # 3. Persistencia de Sesión
+                #  Persistencia de Sesión
                 # Guardamos los datos para que el main.py y dashboard los reconozcan
                 page.session.set("user_name", usuario["username"])
-                # Aseguramos que el rol sea siempre un string limpio
+                #Se asefura que el rol sea siempre un string limpio
                 rol_asignado = str(usuario.get("rol", "admin")).lower()
                 page.session.set("user_rol", rol_asignado) 
                 
@@ -53,7 +53,7 @@ def login_view(page: ft.Page):
                 mostrar_error("Usuario o contraseña incorrectos")
         
         except Exception as ex:
-            # 5. Validación ante caídas de DB o errores inesperados
+            # Validación ante caídas de DB o errores 
             print(f"Error en Login: {ex}")
             mostrar_error("Error de conexión con el servidor")
 
@@ -73,7 +73,7 @@ def login_view(page: ft.Page):
         page.snack_bar.open = True  
         page.update()
 
-    # --- TEXTFIELDS (Estilos originales mantenidos) ---
+    # TEXTFIELDS
     user_input = ft.TextField(
         hint_text="Nombre de usuario",
         width=320, height=50,
@@ -116,7 +116,7 @@ def login_view(page: ft.Page):
         )
     )
 
-    # --- ESTRUCTURA RESPONSIVE (Interfaz intacta) ---
+    #ESTRUCTURA RESPONSISE
     return ft.ResponsiveRow(
         expand=True,
         spacing=0,

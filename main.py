@@ -26,6 +26,8 @@ def main(page: ft.Page):
     inicializar_sistema()
  
     page.title = "Monitor JAC & BEL"
+    
+    page.window_icon = "assets/logo_bel.png"
     page.theme_mode = ft.ThemeMode.LIGHT 
     page.fonts = appFonts.FONTS_DICT
     page.theme = ft.Theme(font_family=appFonts.ARIMO)
@@ -34,7 +36,7 @@ def main(page: ft.Page):
     page.window_height = 850
 
     def route_change(e):
-        # Limpieza absoluta de la lista de vistas para evitar pantallas blancas
+        # Limpieza absoluta 
         page.views.clear()
         
         user_name = page.session.get("user_name")
