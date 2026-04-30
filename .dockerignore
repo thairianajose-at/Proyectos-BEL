@@ -1,0 +1,32 @@
+#entornos virtuales y paquetes
+.venv/
+venv/
+env/
+ENV/
+bin/
+lib/
+share/
+Include/
+Scripts/
+pyvenv.cfg
+# Cache de python
+**/__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+#  Base de datos locales
+*.db
+*.sqlite3
+database/*.db
+
+.vscode/
+.idea/
+.history/
+*.log
+.DS_Store
+Thumbs.db
+
+# Git 
+.git/
+.gitignore

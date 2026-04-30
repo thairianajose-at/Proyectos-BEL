@@ -1,7 +1,4 @@
-import requests
-import random
-from database.config import SessionLocal 
-from database.modelo import Logs        
+import random       
 
 SERVICIOS_EMPRESA = [
     {"nombre": "JAC Venezuela", "ip": "158.69.105.179", "url": "https://jacvenezuela.com/"},

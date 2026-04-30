@@ -4,7 +4,6 @@ from urllib.parse import unquote
 import uvicorn 
 import requests
 from controladores.crud import registrar_log, guardar_metrica_tiempo_real, obtener_indicadores_gerencia
-from database.config import SessionLocal
 
 app = FastAPI()
 

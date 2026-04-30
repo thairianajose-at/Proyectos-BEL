@@ -23,7 +23,7 @@ class MetricasHistoricas(Base):
     servicio = Column(String(50))
     cpu = Column(Float)
     ram = Column(Float)
-    # --- NUEVAS MÉTRICAS AGREGADAS ---
+    # nuevas metricas
     disco_lectura = Column(Float, default=0.0)
     disco_escritura = Column(Float, default=0.0)
     red_bajada = Column(Float, default=0.0)
